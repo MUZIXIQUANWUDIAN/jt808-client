@@ -1,0 +1,91 @@
+package com.lingx.jt808.cmd;
+
+import com.lingx.jt808.utils.Utils;
+
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+
+/**
+ * 车辆位置补报
+ * @author lingx.com
+ *
+ */
+public class Cmd0704 extends AbstractJT808Command {
+
+	
+	public Cmd0704(String tid,double lat,double lng,float speed,int height,int fx,float meilage,float oil,int bj,int zt) {
+		super(0x0704, tid,getBody(tid,lat,lng,speed,height,fx,meilage,oil,bj,zt));
+	}
+	
+	public static byte[] getBody(String tid,double lat,double lng,float speed,int height,int fx,float meilage,float oil,int bj,int zt) {
+		ByteBuf buff=Unpooled.buffer();
+		buff.writeShort(5);//5条记录
+		buff.writeByte(1);//补报
+
+		lat=lat*1000000f;
+		lng=lng*1000000f;
+		
+		for(int i=0;i<5;i++) {
+			buff.writeShort(28);//数据长度
+			
+			buff.writeInt(bj);
+			buff.writeInt(zt);
+			buff.writeInt(new Double(lat).intValue());
+			buff.writeInt(new Double(lng).intValue());
+			buff.writeShort(height);
+			buff.writeShort(new Float(speed*10).intValue());
+			buff.writeShort(fx);
+			buff.writeBytes(Utils.hexToBytes(Utils.getTime().substring(2)));
+		}
+		
+		return returnByteBuf(buff);
+	}
+	
+	
+	public Cmd0704(String tid,double lat,double lng,float speed,int height,int fx,float meilage,float oil,int bj,int zt,int fjId,byte bytes[]) {
+		super(0x0200, tid,getBody(tid,lat,lng,speed,height,fx,meilage,oil,bj,zt, fjId, bytes));
+	}
+	
+	public static byte[] getBody(String tid,double lat,double lng,float speed,int height,int fx,float meilage,float oil,int bj,int zt,int fjId,byte bytes[]) {
+		ByteBuf buff=Unpooled.buffer();
+		buff.writeInt(bj);
+		buff.writeInt(zt);
+		lat=lat*1000000f;
+		buff.writeInt(new Double(lat).intValue());
+		lng=lng*1000000f;
+		buff.writeInt(new Double(lng).intValue());
+		buff.writeShort(height);
+		buff.writeShort(new Float(speed*10).intValue());
+		buff.writeShort(fx);
+		buff.writeBytes(Utils.hexToBytes(Utils.getTime().substring(2)));
+		
+		buff.writeByte(1);
+		buff.writeByte(4);
+		buff.writeInt(new Float(meilage*10).intValue());
+
+		buff.writeByte(2);
+		buff.writeByte(2);
+		buff.writeShort(new Float(oil*10).intValue());
+		
+		buff.writeByte(fjId);
+		buff.writeByte(bytes.length);
+		buff.writeBytes(bytes);
+		return returnByteBuf(buff);
+	}
+	
+	public static void writeString(ByteBuf buff,String str,int length) {
+		byte array[]=new byte[length];
+		byte temp[]=null;
+		try {
+			temp=str.getBytes("GBK");
+		} catch (Exception e) {
+			temp=str.getBytes();
+		}
+		//System.out.println(Utils.bytesToHex(temp));
+		for(int i=0;i<array.length&&i<temp.length;i++) {
+			array[i]=temp[i];
+		}
+		//System.out.println(Utils.bytesToHex(array));
+		buff.writeBytes(array);
+	}
+}
