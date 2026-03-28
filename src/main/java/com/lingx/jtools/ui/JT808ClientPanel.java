@@ -13,7 +13,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
-import com.lingx.jt808.JT808Tools;
+import com.lingx.jt808.JT808ClientContext;
 import com.lingx.jt808.utils.Utils;
 import com.lingx.jtools.ui.dialog.Dialog0x0100;
 import com.lingx.jtools.ui.dialog.Dialog0x0102;
@@ -22,7 +22,14 @@ import com.lingx.jtools.ui.dialog.Dialog0x0200;
 public class JT808ClientPanel extends JPanel{
 
 	private static JButton startButton,stopButton;
-	public static JTextArea textArea;
+	private final TcpClientTabBridge tcpTabUi = new TcpClientTabBridge();
+	private final JT808ClientContext jt808 = new JT808ClientContext(tcpTabUi);
+	private JTextArea textArea;
+
+	public JT808ClientContext getJt808Context() {
+		return jt808;
+	}
+
 	public JT808ClientPanel() {
 		this.setBackground(Color.decode("#dfe9f6"));
 		this.setLayout(new FlexLayout(32,5,10));
@@ -59,6 +66,7 @@ public class JT808ClientPanel extends JPanel{
 		textArea = new MJTextArea();
 		textArea.setEditable(false);
 		textArea.setBackground(Color.decode("#ffffff"));
+		tcpTabUi.bind(textArea, JT808ClientPanel::setButtunZt1);
 		JScrollPane scrollPane = new JScrollPane(textArea);
 		this.add(scrollPane, "flex:12;height:400px");
 
@@ -108,8 +116,8 @@ public class JT808ClientPanel extends JPanel{
 				PropUtils.setProp("device.tid",text3.getText().trim());
 				PropUtils.setProp("device.version",comboBox.getSelectedItem().toString());
 				PropUtils.save();
-				JT808Tools.setTid(tid1, version);
-				JT808Tools.tcp(text1.getText(), text2.getText());
+				jt808.setTid(tid1, version);
+				jt808.tcp(text1.getText(), text2.getText());
 
 				setButtunZt2();
 			}});
@@ -118,7 +126,7 @@ public class JT808ClientPanel extends JPanel{
         stopButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				JT808Tools.tcpClose();
+				jt808.tcpClose();
 				setButtunZt1();
 			}});
 
@@ -143,7 +151,7 @@ public class JT808ClientPanel extends JPanel{
         btnclear.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				JT808Tools.clear();
+				jt808.clear();
 			}});
         btn1078.addActionListener(new ActionListener() {
 			@Override
@@ -153,12 +161,12 @@ public class JT808ClientPanel extends JPanel{
         btnAdas.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				JT808Tools.sendAdas();
+				jt808.sendAdas();
 			}});
         btnDsm.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				JT808Tools.sendDsm();
+				jt808.sendDsm();
 			}});
         
 	}

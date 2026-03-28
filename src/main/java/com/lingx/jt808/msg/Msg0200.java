@@ -22,7 +22,7 @@ import com.lingx.jt808.utils.Utils;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
-public class Msg0200 extends AbstrctMsgHandler implements IJT808MsgHandler{
+public class Msg0200 extends AbstractMsgHandler implements IJT808MsgHandler{
 
 	public Msg0200() {
 		listAttached=new ArrayList<>();

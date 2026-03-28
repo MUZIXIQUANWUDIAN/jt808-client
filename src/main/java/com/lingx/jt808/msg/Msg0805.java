@@ -6,7 +6,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 
 
-public class Msg0805 extends AbstrctMsgHandler implements IJT808MsgHandler {
+public class Msg0805 extends AbstractMsgHandler implements IJT808MsgHandler {
 	
 	@Override
 	public int getMsgId() {

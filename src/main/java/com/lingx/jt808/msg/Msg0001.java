@@ -2,7 +2,7 @@ package com.lingx.jt808.msg;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
-public class Msg0001 extends AbstrctMsgHandler implements IJT808MsgHandler{
+public class Msg0001 extends AbstractMsgHandler implements IJT808MsgHandler{
 	@Override
 	public int getMsgId() {
 		return 0x0001;

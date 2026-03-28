@@ -1,56 +1,51 @@
 package com.lingx.gps.netty.nojt808.client;
 
-import com.lingx.jt808.JT808Tools;
-import com.lingx.jt808.cmd.Cmd0001;
-import com.lingx.jt808.cmd.Cmd0104;
-import com.lingx.jt808.cmd.Cmd0805;
-import com.lingx.jt808.cmd.Cmd1205;
-import com.lingx.jt808.thread.SendAdasFileThread;
-import com.lingx.jt808.thread.SendImageThread;
-import com.lingx.jt808.thread.SendVideoThread;
-import com.lingx.jt808.utils.JT808Utils;
-import com.lingx.jt808.utils.Utils;
-import com.lingx.jtools.ui.JT808ClientPanel;
-import com.lingx.jtools.ui.NoJT808ClientPanel;
+import java.util.function.BooleanSupplier;
 
-import io.netty.buffer.ByteBuf;
+import com.lingx.jt808.utils.Utils;
+import com.lingx.jtools.ui.TcpClientTabBridge;
+
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 
-public class NoJt808TcpClientHandler  extends SimpleChannelInboundHandler<byte[]>  {
+public class NoJt808TcpClientHandler extends SimpleChannelInboundHandler<byte[]> {
+
+	private final NoJt808TcpClient client;
+	private final TcpClientTabBridge ui;
+	private final BooleanSupplier hexDisplay;
+
+	public NoJt808TcpClientHandler(NoJt808TcpClient client, TcpClientTabBridge ui, BooleanSupplier hexDisplay) {
+		this.client = client;
+		this.ui = ui;
+		this.hexDisplay = hexDisplay;
+	}
 
 	@Override
-	protected void channelRead0(ChannelHandlerContext ctx, byte[] arg1) throws Exception {
-		if(NoJT808ClientPanel.hex.isSelected()) {
-			String hexstring=Utils.bytesToHex(arg1);
-			NoJT808ClientPanel.addMessage(hexstring);
-		}else {
-			String hexstring=new String(arg1);
-			NoJT808ClientPanel.addMessage(hexstring);
+	protected void channelRead0(ChannelHandlerContext ctx, byte[] arg1) {
+		if (hexDisplay.getAsBoolean()) {
+			ui.appendArrowLog(Utils.bytesToHex(arg1));
+		} else {
+			ui.appendArrowLog(new String(arg1));
 		}
-		
-		
 	}
+
 	@Override
 	public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-		//System.out.println("==============长连接失效===============");
 		super.channelInactive(ctx);
-		NoJT808ClientPanel.addMessage("服务器连接断开");
-		NoJT808ClientPanel.setButtunZt1();
-		NoJt808TcpClient.channel=null;
+		client.setChannel(null);
+		ui.appendArrowLog("服务器连接断开");
+		ui.notifyDisconnected();
 	}
 
 	@Override
 	public void channelActive(ChannelHandlerContext ctx) throws Exception {
-		//System.out.println("==============长连接接入===============");
 		super.channelActive(ctx);
-		NoJt808TcpClient.channel=ctx.channel();
-		NoJT808ClientPanel.addMessage("服务器连接成功");
+		client.setChannel(ctx.channel());
+		ui.appendArrowLog("服务器连接成功");
 	}
 
 	@Override
-	public void exceptionCaught(ChannelHandlerContext ctx,Throwable t) {
-		NoJT808ClientPanel.addMessage("服务器连接异常");
+	public void exceptionCaught(ChannelHandlerContext ctx, Throwable t) {
+		ui.appendArrowLog("服务器连接异常");
 	}
-	
 }

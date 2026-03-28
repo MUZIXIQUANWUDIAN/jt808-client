@@ -21,11 +21,14 @@ public class PropUtils {
 	}
 	
 	public static String getProp(String key) {
+		return getProp(key,"");
+	}
+	public static String getProp(String key,String defaultValue) {
 		if(prop==null) {
 			init();
 		}
 		String ret=prop.getProperty(key);
-		if(ret==null)ret="";
+		if(ret==null)ret=defaultValue;
 		return ret;
 	}
 	

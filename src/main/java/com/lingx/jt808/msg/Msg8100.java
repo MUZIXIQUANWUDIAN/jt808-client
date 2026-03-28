@@ -3,7 +3,7 @@ package com.lingx.jt808.msg;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 
-public class Msg8100 extends AbstrctMsgHandler implements IJT808MsgHandler {
+public class Msg8100 extends AbstractMsgHandler implements IJT808MsgHandler {
 	
  
 	@Override

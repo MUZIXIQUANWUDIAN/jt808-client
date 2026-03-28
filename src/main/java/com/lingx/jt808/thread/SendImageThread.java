@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 
-import com.lingx.jt808.JT808Tools;
+import com.lingx.jt808.JT808ClientContext;
 import com.lingx.jt808.cmd.Cmd0801;
 import com.lingx.jt808.netty.MyByteBuf;
 
@@ -13,8 +13,11 @@ import io.netty.buffer.Unpooled;
 
 public class SendImageThread implements Runnable {
 	public static byte[] WZ_DATA=new byte[28];
-	public SendImageThread(String tid) {
+	private final JT808ClientContext session;
+
+	public SendImageThread(String tid, JT808ClientContext session) {
 		this.tid=tid;
+		this.session = session;
 	}
 	private String tid;
 	@Override
@@ -42,7 +45,7 @@ public class SendImageThread implements Runnable {
 				byteBuf.writeBytes(buff, 0, len);
 				MyByteBuf mbb=new MyByteBuf(byteBuf);
 				Cmd0801 cmd=new Cmd0801(tid,mbb.readBytes(mbb.readableBytes()),max,ind);
-				JT808Tools.sendMessage(cmd.toMessageBytes());
+				session.sendMessage(cmd.toMessageBytes());
 				ind++;
 			}
 		} catch (Exception e) {

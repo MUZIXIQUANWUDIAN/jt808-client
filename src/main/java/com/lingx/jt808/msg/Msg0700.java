@@ -8,7 +8,7 @@ import com.lingx.jt808.utils.Utils;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 
-public class Msg0700 extends AbstrctMsgHandler implements IJT808MsgHandler {
+public class Msg0700 extends AbstractMsgHandler implements IJT808MsgHandler {
 
 	@Override
 	public int getMsgId() {

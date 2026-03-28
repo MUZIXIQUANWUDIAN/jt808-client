@@ -13,7 +13,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 
-public class Msg0704 extends AbstrctMsgHandler implements IJT808MsgHandler {
+public class Msg0704 extends AbstractMsgHandler implements IJT808MsgHandler {
 	@Resource
 	private List<IJT808MsgAttached> listAttached;
 	

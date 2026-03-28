@@ -1,29 +1,36 @@
 package com.lingx.jt808.thread;
 
-import com.lingx.jt808.JT808Tools;
+import com.lingx.jt808.JT808ClientContext;
 import com.lingx.jt808.cmd.Cmd0200;
-import com.lingx.jt808.netty.TcpClient;
-import com.lingx.jtools.ui.MJTextField;
 import com.lingx.jtools.ui.PropUtils;
 
+import io.netty.channel.Channel;
+
 public class Send0x0200Thread implements Runnable {
-	public Send0x0200Thread(String tid) {
-		this.tid=tid;
+
+	private final JT808ClientContext session;
+
+	public Send0x0200Thread(JT808ClientContext session, String tid) {
+		this.session = session;
+		this.tid = tid;
 	}
-	public Send0x0200Thread(String tid, double lat, double lng, float speed, int height, int fx, float meilage,
-			float oil, int bj, int zt, int time) {
-		this.tid=tid;
-		this.lat=lat;
-		this.lng=lng;
-		this.speed=speed;
-		this.height=height;
-		this.fx=fx;
-		this.meilage=meilage;
-		this.oil=oil;
-		this.bj=bj;
-		this.zt=zt;
-		this.time=time;
+
+	public Send0x0200Thread(JT808ClientContext session, String tid, double lat, double lng, float speed, int height,
+			int fx, float meilage, float oil, int bj, int zt, int time) {
+		this.session = session;
+		this.tid = tid;
+		this.lat = lat;
+		this.lng = lng;
+		this.speed = speed;
+		this.height = height;
+		this.fx = fx;
+		this.meilage = meilage;
+		this.oil = oil;
+		this.bj = bj;
+		this.zt = zt;
+		this.time = time;
 	}
+
 	private String tid;
 	private double lat;
 	private double lng;
@@ -37,42 +44,59 @@ public class Send0x0200Thread implements Runnable {
 	private int time;
 	private boolean isRun = true;
 
+	/** 未连接或断线时避免 while 空转占满 CPU */
+	private static final long WAIT_DISCONNECTED_MS = 500L;
+
 	@Override
 	public void run() {
 		while (isRun) {
 			try {
-				if(TcpClient.channel!=null) {
-
-					this.lat=Double.parseDouble(PropUtils.getProp("jt808.0x0200.lat"));
-					this.lng=Double.parseDouble(PropUtils.getProp("jt808.0x0200.lng"));
-					this.speed=Float.parseFloat(PropUtils.getProp("jt808.0x0200.speed"));
-					this.height=Integer.parseInt(PropUtils.getProp("jt808.0x0200.height"));
-					this.fx=Integer.parseInt(PropUtils.getProp("jt808.0x0200.direction"));
-					this.meilage=Float.parseFloat(PropUtils.getProp("jt808.0x0200.mileage"));
-					this.oil=Float.parseFloat(PropUtils.getProp("jt808.0x0200.oil"));
-					this.time=Integer.parseInt(PropUtils.getProp("jt808.0x0200.interval"));
-				this.bj=0;
-				if("true".equals(PropUtils.getProp("jt808.0x0200.bj0")))bj+=1;
-				if("true".equals(PropUtils.getProp("jt808.0x0200.bj1")))bj+=2;
-				if("true".equals(PropUtils.getProp("jt808.0x0200.bj2")))bj+=4;
-				this.zt=0;
-				if("true".equals(PropUtils.getProp("jt808.0x0200.zt0")))zt+=1;
-				if("true".equals(PropUtils.getProp("jt808.0x0200.zt1")))zt+=2;
-				Cmd0200 cmd = new Cmd0200(tid, lat, lng, speed, height, fx, meilage, oil, bj, zt);
-				String hexstring = cmd.toMessageHexstring();
-				JT808Tools.sendMessage(hexstring);
-				Thread.currentThread().sleep(time * 1000);
+				Channel ch = session.getChannel();
+				if (ch != null && ch.isActive()) {
+					this.lat = Double.parseDouble(PropUtils.getProp("jt808.0x0200.lat", "0"));
+					this.lng = Double.parseDouble(PropUtils.getProp("jt808.0x0200.lng", "0"));
+					this.speed = Float.parseFloat(PropUtils.getProp("jt808.0x0200.speed", "0"));
+					this.height = Integer.parseInt(PropUtils.getProp("jt808.0x0200.height", "0"));
+					this.fx = Integer.parseInt(PropUtils.getProp("jt808.0x0200.direction", "0"));
+					this.meilage = Float.parseFloat(PropUtils.getProp("jt808.0x0200.mileage", "0"));
+					this.oil = Float.parseFloat(PropUtils.getProp("jt808.0x0200.oil", "0"));
+					this.time = Integer.parseInt(PropUtils.getProp("jt808.0x0200.interval", "15"));
+					this.bj = 0;
+					if ("true".equals(PropUtils.getProp("jt808.0x0200.bj0"))) {
+						bj += 1;
+					}
+					if ("true".equals(PropUtils.getProp("jt808.0x0200.bj1"))) {
+						bj += 2;
+					}
+					if ("true".equals(PropUtils.getProp("jt808.0x0200.bj2"))) {
+						bj += 4;
+					}
+					this.zt = 0;
+					if ("true".equals(PropUtils.getProp("jt808.0x0200.zt0"))) {
+						zt += 1;
+					}
+					if ("true".equals(PropUtils.getProp("jt808.0x0200.zt1"))) {
+						zt += 2;
+					}
+					Cmd0200 cmd = new Cmd0200(tid, lat, lng, speed, height, fx, meilage, oil, bj, zt);
+					String hexstring = cmd.toMessageHexstring();
+					session.sendMessage(hexstring);
+					long intervalMs = Math.max(1000L, (long) this.time * 1000L);
+					Thread.sleep(intervalMs);
+				} else {
+					Thread.sleep(WAIT_DISCONNECTED_MS);
 				}
 			} catch (InterruptedException e) {
-				e.printStackTrace();
+				Thread.currentThread().interrupt();
+				break;
 			}
 		}
 	}
-	
+
 	public void send() {
 		Cmd0200 cmd = new Cmd0200(tid, lat, lng, speed, height, fx, meilage, oil, bj, zt);
 		String hexstring = cmd.toMessageHexstring();
-		JT808Tools.sendMessage(hexstring);
+		session.sendMessage(hexstring);
 	}
 
 	public void setTid(String tid) {
@@ -170,5 +194,4 @@ public class Send0x0200Thread implements Runnable {
 	public boolean isRun() {
 		return isRun;
 	}
-
 }

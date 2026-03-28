@@ -48,17 +48,16 @@ public class JT808Utils {
 		int len = bytes.length;
 		ByteBuf buf = Unpooled.buffer();
 		for (int i = 0; i < len; i++) {
-			if (bytes[i] == 0x7d && bytes[i + 1] == 0x01) {
+			if (i + 1 < len && bytes[i] == 0x7d && bytes[i + 1] == 0x01) {
 				buf.writeByte(0x7d);
 				i++;
-			} else if (bytes[i] == 0x7d && bytes[i + 1] == 0x02) {
+			} else if (i + 1 < len && bytes[i] == 0x7d && bytes[i + 1] == 0x02) {
 				buf.writeByte(0x7e);
 				i++;
 			} else {
 				buf.writeByte(bytes[i]);
 			}
 		}
-		bytes=null;
 		return buf;
 	}
 	

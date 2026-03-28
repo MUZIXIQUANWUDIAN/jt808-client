@@ -12,7 +12,7 @@ import io.netty.channel.ChannelHandlerContext;
  * @author lingx.com
  *
  */
-public class Msg0104 extends AbstrctMsgHandler implements IJT808MsgHandler {
+public class Msg0104 extends AbstractMsgHandler implements IJT808MsgHandler {
 	
  
 	@Override

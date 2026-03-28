@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import com.lingx.jt808.JT808Tools;
 import com.lingx.jt808.utils.Utils;
 
 import io.netty.buffer.ByteBuf;
