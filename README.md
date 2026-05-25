@@ -10,7 +10,6 @@ JT/T 808 终端模拟与调试工具：支持 **JT808 客户端/服务端模拟*
 | JT808 服务端 | 简易 TCP 服务端，接收终端报文并做基础应答演示 |
 | JT808 报文解析 | 粘贴完整 7E…7E 十六进制报文，解析展示 |
 | TCP 客户端 / TCP 服务端 | 与协议无关的字节流收发，便于联调非 808 通道 |
-| 广告信息 | 广告相关配置界面 |
 
 ## 协议支持
 
@@ -94,8 +93,3 @@ java -cp "<classpath>" com.lingx.jt808.App --batch 121.40.187.223 8800 130000000
 - 当前 GitHub：<https://github.com/MUZIXIQUANWUDIAN/jt808-client>
 - 上游 Gitee：<https://gitee.com/lingxcom/jt808-client>
 
-## 界面预览
-
-基于 Swing + FlatLaf，主窗口为多 Tab 工具集。
-
-![index](readme/20250415145524.png "index.png")

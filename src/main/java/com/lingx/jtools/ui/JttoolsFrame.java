@@ -48,7 +48,6 @@ public class JttoolsFrame {
         tabbedPane.addTab("TCP客户端", tab98);
         JPanel tab99 = new NoJT808ServerPanel();
         tabbedPane.addTab("TCP服务端", tab99);
-        tabbedPane.addTab("广告信息", new AdPanel());
         //JPanel tab4 = new JPanel();
         //tabbedPane.addTab("JT808平台商业开源", tab4);
         frame.setVisible(true);
