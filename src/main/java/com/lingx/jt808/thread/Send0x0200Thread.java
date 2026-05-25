@@ -43,9 +43,24 @@ public class Send0x0200Thread implements Runnable {
 	private int zt;
 	private int time;
 	private boolean isRun = true;
+	private boolean moveSimulated = false;
 
 	/** 未连接或断线时避免 while 空转占满 CPU */
 	private static final long WAIT_DISCONNECTED_MS = 500L;
+
+	/** 模拟移动：根据速度计算每步经纬度增量 */
+	private void simulateMovement() {
+		// speed 单位为 km/h，转换为 度/秒（纬度1度≈111km）
+		double metersPerSecond = this.speed / 3.6;
+		double intervalSec = this.time;
+		double distMeters = metersPerSecond * intervalSec;
+		// 方向角 fx（0-359度，0为北，顺时针）
+		double rad = Math.toRadians(this.fx);
+		double dLatMeters = distMeters * Math.cos(rad);
+		double dLngMeters = distMeters * Math.sin(rad);
+		this.lat += dLatMeters / 111000.0;
+		this.lng += dLngMeters / (111000.0 * Math.cos(Math.toRadians(this.lat)));
+	}
 
 	@Override
 	public void run() {
@@ -53,8 +68,6 @@ public class Send0x0200Thread implements Runnable {
 			try {
 				Channel ch = session.getChannel();
 				if (ch != null && ch.isActive()) {
-					this.lat = Double.parseDouble(PropUtils.getProp("jt808.0x0200.lat", "0"));
-					this.lng = Double.parseDouble(PropUtils.getProp("jt808.0x0200.lng", "0"));
 					this.speed = Float.parseFloat(PropUtils.getProp("jt808.0x0200.speed", "0"));
 					this.height = Integer.parseInt(PropUtils.getProp("jt808.0x0200.height", "0"));
 					this.fx = Integer.parseInt(PropUtils.getProp("jt808.0x0200.direction", "0"));
@@ -78,6 +91,15 @@ public class Send0x0200Thread implements Runnable {
 					if ("true".equals(PropUtils.getProp("jt808.0x0200.zt1"))) {
 						zt += 2;
 					}
+
+					if (!moveSimulated) {
+						this.lat = Double.parseDouble(PropUtils.getProp("jt808.0x0200.lat", "0"));
+						this.lng = Double.parseDouble(PropUtils.getProp("jt808.0x0200.lng", "0"));
+						moveSimulated = true;
+					} else {
+						simulateMovement();
+					}
+
 					Cmd0200 cmd = new Cmd0200(tid, lat, lng, speed, height, fx, meilage, oil, bj, zt);
 					String hexstring = cmd.toMessageHexstring();
 					session.sendMessage(hexstring);

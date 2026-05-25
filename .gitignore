@@ -1,0 +1,9 @@
+target/
+_tmp/
+.vscode/
+*.class
+*.log
+
+# Local runtime configuration
+config.properties
+

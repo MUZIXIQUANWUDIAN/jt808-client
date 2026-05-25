@@ -26,7 +26,7 @@ JT/T 808 终端模拟与调试工具：支持 **JT808 客户端/服务端模拟*
 
 - **JDK**：1.8 及以上（与 `pom.xml` 中 `maven-compiler-plugin` 一致）
 - **构建**：Apache Maven 3.x
-- **配置**：首次运行前确保项目根目录存在 **`config.properties`**（可与仓库内示例一致；界面中修改 IP、端口、终端号等后会写回该文件）
+- **配置**：首次运行前将项目根目录下的 **`config.example.properties`** 复制为 **`config.properties`**；界面中修改 IP、端口、终端号等后会写回 `config.properties`
 
 ## 编译与启动
 
@@ -51,6 +51,29 @@ mvn -q org.codehaus.mojo:exec-maven-plugin:3.1.0:java -Dexec.mainClass=com.lingx
 - 主类：`com.lingx.jt808.App`  
 - 用途：脚本化连指定 IP/端口并触发上报（参数：`ip port tid`，可省略使用内置默认）
 
+### 批量模拟模式（新增）
+
+`App` 支持批量启动多个终端连接，便于压测 Traccar 写入与在线并发能力。
+
+```bash
+java -cp <classpath> com.lingx.jt808.App --batch <ip> <port> <startTid> <count> [intervalSec] [connectDelayMs] [version]
+```
+
+参数说明：
+
+- `ip` / `port`：Traccar 协议端口（例如 `8800`）
+- `startTid`：起始设备号（自动递增）
+- `count`：模拟终端数量
+- `intervalSec`：0x0200 上报间隔秒，默认 `15`
+- `connectDelayMs`：每个终端启动间隔毫秒，默认 `30`
+- `version`：可选，含 `2019` 字样时按 20 位终端号，否则按 12 位
+
+示例：
+
+```bash
+java -cp "<classpath>" com.lingx.jt808.App --batch 121.40.187.223 8800 130000000000 500 30 20 jt808-2011
+```
+
 ## 工程结构（简要）
 
 | 包路径 | 作用 |
@@ -68,8 +91,8 @@ mvn -q org.codehaus.mojo:exec-maven-plugin:3.1.0:java -Dexec.mainClass=com.lingx
 
 ## 代码仓库
 
-- Gitee：<https://gitee.com/lingxcom/jt808-client>  
-- GitHub：<https://github.com/lingxcom/jt808-client>
+- 当前 GitHub：<https://github.com/MUZIXIQUANWUDIAN/jt808-client>
+- 上游 Gitee：<https://gitee.com/lingxcom/jt808-client>
 
 ## 界面预览
 

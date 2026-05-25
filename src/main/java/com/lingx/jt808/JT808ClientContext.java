@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicLong;
 
 import com.lingx.jt808.cmd.Cmd0100;
 import com.lingx.jt808.cmd.Cmd0102;
@@ -20,6 +21,7 @@ import com.lingx.jtools.ui.TcpClientTabBridge;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
+import io.netty.channel.EventLoopGroup;
 
 /**
  * JT808 client session: connection, logging, and outbound messages for one {@link com.lingx.jtools.ui.JT808ClientPanel}.
@@ -32,10 +34,20 @@ public class JT808ClientContext {
 	private volatile Send0x0200Thread send0x0200Thread;
 	private volatile Thread send0x0200Worker;
 	private volatile String tid;
+	private volatile boolean trafficLogEnabled = true;
+	private volatile boolean statusLogEnabled = true;
+	private final AtomicLong sentCounter = new AtomicLong();
 	private int bjid;
+	/** 批量模式共享的 EventLoopGroup，null 时由 TcpClient 自建 */
+	private EventLoopGroup sharedGroup;
 
 	public JT808ClientContext(TcpClientTabBridge ui) {
 		this.ui = ui;
+	}
+
+	/** 设置共享 EventLoopGroup（批量模式使用） */
+	public void setSharedGroup(EventLoopGroup group) {
+		this.sharedGroup = group;
 	}
 
 	public TcpClientTabBridge getUi() {
@@ -56,7 +68,7 @@ public class JT808ClientContext {
 
 	public void tcp(String ip, String port) {
 		callAardio("正在连接服务器" + ip + ":" + port);
-		new Thread(new StartTcpClientThread(ip, Integer.parseInt(port), this)).start();
+		new Thread(new StartTcpClientThread(ip, Integer.parseInt(port), this, sharedGroup)).start();
 	}
 
 	public void tcpClose() {
@@ -82,16 +94,22 @@ public class JT808ClientContext {
 	public void sendMessage(String hexstring) {
 		Channel ch = channel;
 		if (ch != null) {
-			addMessageReq(hexstring);
+			if (trafficLogEnabled) {
+				addMessageReq(hexstring);
+			}
 			ch.writeAndFlush(Unpooled.wrappedBuffer(Utils.hexToBytes(hexstring)));
+			sentCounter.incrementAndGet();
 		}
 	}
 
 	public void sendMessage(byte[] bytes) {
 		Channel ch = channel;
 		if (ch != null && bytes != null) {
-			addMessageReq(Utils.bytesToHex(bytes));
+			if (trafficLogEnabled) {
+				addMessageReq(Utils.bytesToHex(bytes));
+			}
 			ch.writeAndFlush(Unpooled.wrappedBuffer(bytes));
+			sentCounter.incrementAndGet();
 		}
 	}
 
@@ -104,6 +122,9 @@ public class JT808ClientContext {
 	}
 
 	public String addMessageRes(String aaa) {
+		if (!trafficLogEnabled) {
+			return "";
+		}
 		SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
 		System.out.println(sdf.format(new Date()) + " RES" + "-> " + aaa);
 		addText(sdf.format(new Date()) + " RES" + "-> " + aaa);
@@ -111,6 +132,9 @@ public class JT808ClientContext {
 	}
 
 	public String addMessageReq(String aaa) {
+		if (!trafficLogEnabled) {
+			return "";
+		}
 		SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
 		System.out.println(sdf.format(new Date()) + " REQ" + "-> " + aaa);
 		addText(sdf.format(new Date()) + " REQ" + "-> " + aaa);
@@ -118,6 +142,9 @@ public class JT808ClientContext {
 	}
 
 	public String callAardio(String aaa) {
+		if (!statusLogEnabled) {
+			return "";
+		}
 		System.out.println(aaa);
 		SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
 		addText(sdf.format(new Date()) + "-> " + aaa);
@@ -125,7 +152,27 @@ public class JT808ClientContext {
 	}
 
 	public String callAardio(String aaa, boolean cmd) {
+		if (!statusLogEnabled) {
+			return "";
+		}
 		return "";
+	}
+
+	public void setTrafficLogEnabled(boolean enabled) {
+		this.trafficLogEnabled = enabled;
+	}
+
+	public void setStatusLogEnabled(boolean enabled) {
+		this.statusLogEnabled = enabled;
+	}
+
+	public long getSentCount() {
+		return sentCounter.get();
+	}
+
+	public boolean isConnected() {
+		Channel ch = channel;
+		return ch != null && ch.isActive();
 	}
 
 	public String jt808hexstring(String hexstring) {

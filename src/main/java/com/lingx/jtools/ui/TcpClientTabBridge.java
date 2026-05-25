@@ -27,12 +27,12 @@ public final class TcpClientTabBridge {
 			return;
 		}
 		if (SwingUtilities.isEventDispatchThread()) {
-			ta.insert(text, 0);
+			ta.append(text);
 		} else {
 			SwingUtilities.invokeLater(() -> {
 				JTextArea t = logArea;
 				if (t != null) {
-					t.insert(text, 0);
+					t.append(text);
 				}
 			});
 		}

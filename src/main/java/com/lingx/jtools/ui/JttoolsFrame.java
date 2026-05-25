@@ -1,6 +1,7 @@
 package com.lingx.jtools.ui;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Image;
 import java.awt.Toolkit;
 
@@ -22,10 +23,11 @@ public class JttoolsFrame {
         ImageIcon icon3 = new ImageIcon(JttoolsFrame.class.getResource("/images/disk.png"));
         JFrame frame = new JFrame("部标JT808、JT1078、苏标测试工具 - http://www.lingx.com");
         frame.setIconImage(iconImage);
-    	frame.setResizable(false);
+    	frame.setResizable(true);
 
         // 设置窗口大小和位置
-        frame.setSize(800, 600);
+        frame.setSize(1280, 860);
+        frame.setMinimumSize(new Dimension(1100, 760));
         frame.setLocationRelativeTo(null);
         frame.getContentPane().setBackground(Color.decode("#ffffff"));
         //frame.setLayout(new FlexLayout(32,5,10));
