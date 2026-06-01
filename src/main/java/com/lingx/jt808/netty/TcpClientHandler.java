@@ -119,10 +119,29 @@ public class TcpClientHandler extends SimpleChannelInboundHandler<byte[]> {
 		}
 		switch(msgId) {
 		case 0x8001:
-			session.send0x0200();
+			// 0x8001 通用应答: [应答流水号(2)][应答ID(2)][结果(1)]
+			if (contentBytes != null && contentBytes.length >= 5) {
+				int replyId8001 = ((contentBytes[2] & 0xFF) << 8) | (contentBytes[3] & 0xFF);
+				int result8001 = contentBytes[4] & 0xFF;
+				// 只在鉴权(0x0102)应答成功时才启动位置上报
+				if (replyId8001 == 0x0102 && result8001 == 0) {
+					session.send0x0200();
+				}
+			}
 			break;
 		case 0x8100:
-			session.send0x0102();
+			// 0x8100 注册应答: [应答流水号(2)][结果(1)][鉴权码(变长)]
+			if (contentBytes != null && contentBytes.length >= 3) {
+				int regResult = contentBytes[2] & 0xFF;
+				if (regResult == 0 && contentBytes.length > 3) {
+					// 提取服务器返回的鉴权码
+					String authCode = new String(contentBytes, 3, contentBytes.length - 3);
+					session.send0x0102(tid, authCode);
+				} else if (regResult == 0) {
+					// 注册成功但无鉴权码，使用配置文件默认值
+					session.send0x0102();
+				}
+			}
 			break;
 		case 0x8103:
 			Cmd0001 cmd0001=new Cmd0001(tid,msgSn,msgId);
